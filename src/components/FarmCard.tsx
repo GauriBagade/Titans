@@ -1,55 +1,70 @@
-import { Farm } from "@/types/farm";
-import { Button } from "@/components/ui/button";
-import { Trash2, Wheat, Ruler } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Cloud, CloudRain, Sun, CloudSun, Snowflake, CloudFog } from "lucide-react";
+import type { ForecastDay } from "@/hooks/useWeather";
 
-interface FarmCardProps {
-  farm: Farm;
-  onDelete: (id: string) => void;
-  cropLabels: Record<string, string>;
-  sizeLabels: Record<string, string>;
+interface ForecastCardProps {
+  forecast: ForecastDay[];
+  className?: string;
 }
 
-const FarmCard = ({ farm, onDelete, cropLabels, sizeLabels }: FarmCardProps) => {
+const getWeatherIcon = (icon: string) => {
+  if (icon.startsWith('01')) return <Sun className="h-6 w-6 text-warning" />;
+  if (icon.startsWith('02') || icon.startsWith('03')) return <CloudSun className="h-6 w-6 text-warning" />;
+  if (icon.startsWith('04')) return <Cloud className="h-6 w-6 text-muted-foreground" />;
+  if (icon.startsWith('09') || icon.startsWith('10')) return <CloudRain className="h-6 w-6 text-primary" />;
+  if (icon.startsWith('11')) return <CloudRain className="h-6 w-6 text-accent" />;
+  if (icon.startsWith('13')) return <Snowflake className="h-6 w-6 text-primary" />;
+  if (icon.startsWith('50')) return <CloudFog className="h-6 w-6 text-muted-foreground" />;
+  return <Sun className="h-6 w-6 text-warning" />;
+};
+
+const ForecastCard = ({ forecast, className }: ForecastCardProps) => {
   const { t } = useLanguage();
 
+  if (!forecast || forecast.length === 0) {
+    return null;
+  }
+
   return (
-    <div className="rounded-2xl border-2 border-border bg-card p-4 shadow-soft">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <h3 className="text-farmer-lg font-semibold text-foreground">
-            {farm.name || t("unnamedFarm")}
-          </h3>
-          
-          <div className="mt-2 flex items-center gap-2 text-farmer-sm text-muted-foreground">
-            <Ruler className="h-4 w-4" />
-            <span>{sizeLabels[farm.size] || farm.size}</span>
-          </div>
-          
-          <div className="mt-2 flex flex-wrap gap-2">
-            {farm.crops.map((crop, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-farmer-sm font-medium text-primary"
-              >
-                <Wheat className="h-3 w-3" />
-                {cropLabels[crop] || crop}
+    <Card className={cn("card-elevated overflow-hidden p-4", className)}>
+      <h3 className="text-farmer-base font-semibold text-foreground mb-4">
+        {t("fiveDayForecast")}
+      </h3>
+      
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {forecast.slice(0, 5).map((day, index) => (
+          <div 
+            key={day.date}
+            className={cn(
+              "flex-shrink-0 flex flex-col items-center p-3 rounded-xl min-w-[72px]",
+              index === 0 ? "bg-primary/10" : "bg-muted/50"
+            )}
+          >
+            <span className="text-farmer-xs font-medium text-muted-foreground">
+              {index === 0 ? t("tomorrow") : day.dayName.slice(0, 3)}
+            </span>
+            
+            <div className="my-2">
+              {getWeatherIcon(day.icon)}
+            </div>
+            
+            <div className="flex items-center gap-1 text-farmer-sm">
+              <span className="font-bold text-foreground">{day.tempMax}°</span>
+              <span className="text-muted-foreground">{day.tempMin}°</span>
+            </div>
+            
+            {day.rainfall > 0 && (
+              <span className="text-farmer-xs text-primary mt-1">
+                {day.rainfall}mm
               </span>
-            ))}
+            )}
           </div>
-        </div>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onDelete(farm.id)}
-          className="h-10 w-10 text-destructive hover:bg-destructive/10"
-        >
-          <Trash2 className="h-5 w-5" />
-        </Button>
+        ))}
       </div>
-    </div>
+    </Card>
   );
 };
 
-export default FarmCard;
+export default ForecastCard;
