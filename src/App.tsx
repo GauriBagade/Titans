@@ -16,9 +16,10 @@ import Farms from "./pages/Farms";
 import Auth from "./pages/Auth";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
+import FarmFreshSplash from "./components/FarmFreshSplash";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "@/lib/firebase";
 
@@ -192,6 +193,18 @@ const AppRoutes = () => {
 /* -------------------- UPDATED APP COMPONENT -------------------- */
 
 function App() {
+  const [showSplash, setShowSplash] = useState(
+    !localStorage.getItem("splashShown")
+  );
+
+  const handleSplashFinish = () => {
+    localStorage.setItem("splashShown", "true");
+    setShowSplash(false);
+  };
+
+  if (showSplash) {
+    return <FarmFreshSplash onFinish={handleSplashFinish} />;
+  }
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) {
